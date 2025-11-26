@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useScroll, Environment } from '@react-three/drei';
@@ -26,14 +27,14 @@ const SceneContent: React.FC = () => {
 
     // Interpolation Configuration
     const startZ = 1.2;
-    const midZ = 4.5;
-    const finalZ = 7.0;
+    const midZ = 3.5;
+    const finalZ = 5.5;
     
     const startY = 0;
-    const finalY = -1.0; // Slightly move down
+    const finalY = -1.5; // Slightly move down further
     
     const startXRot = 0;
-    const finalXRot = -0.15; // Rotate x-axis to look down (~8.5 degrees)
+    const finalXRot = 0.0; // Rotate x-axis to look straight/slightly up from lower position
     
     // Calculate current target position based on scroll
     let targetZ = startZ;

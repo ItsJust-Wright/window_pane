@@ -5,9 +5,9 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const OutsideView: React.FC = () => {
-  // Use the Raw GitHub URL to load the image reliably across environments
-  // This bypasses local file path resolution issues
-  const textureUrl = 'https://raw.githubusercontent.com/ItsJust-Wright/window_pane/main/public/Laguna.jpg';
+  // Use a reliable Unsplash URL for the night cityscape
+  // This replaces the broken raw.githubusercontent URL that was causing loading failures
+  const textureUrl = 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80';
   
   const texture = useTexture(textureUrl);
   const materialRef = useRef<THREE.MeshBasicMaterial>(null);
@@ -27,8 +27,7 @@ const OutsideView: React.FC = () => {
       {/* 
         The view plane. 
         Placed behind the window. 
-        Scaled to 9x12 (Ratio 0.75 or 3:4) to match the Laguna.jpg dimensions (3024x4032).
-        This prevents distortion and cropping.
+        Scaled to 9x12 (Ratio 0.75 or 3:4) to match typical aspect ratios.
       */}
       <mesh>
         <planeGeometry args={[9, 12]} />

@@ -130,7 +130,6 @@ const Cake: React.FC<CakeProps> = ({ position, isOpen }) => {
       {/* Hidden Message inside the cake */}
       <group ref={textRef} position={[0, 0.1, 0]} scale={[0, 0, 0]}>
         <Text
-          font="https://fonts.gstatic.com/s/greatvibes/v14/RWmMoKWR9v4ksMflq1L1x9P9.woff"
           fontSize={0.25}
           color="#ffcc00"
           anchorX="center"
