@@ -1,11 +1,12 @@
 import React, { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useScroll, Environment, Float } from '@react-three/drei';
+import { useScroll, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 import Curtains from './Curtains';
 import WindowFrame from './WindowFrame';
 import OutsideView from './OutsideView';
 import RoomEnvironment from './RoomEnvironment';
+import Table from './Table';
 
 const SceneContent: React.FC = () => {
   const scroll = useScroll();
@@ -19,61 +20,63 @@ const SceneContent: React.FC = () => {
     const r = scroll.offset;
 
     // Define Camera Keyframes
-    // Initial Position (Zoomed in on window): [0, 0, 1.5]
-    // Phase 1 (0 to 0.25): Linear Zoom Out to reveal curtains. Target Z: 5
-    // Phase 2 (0.25 to 1.0): Pan Down and Zoom further back. Target Y: -2, Target Z: 8
+    // Initial Position (Zoomed in on window): [0, 0, 1.2]
+    // Phase 1 (0 to 0.25): Linear Zoom Out.
+    // Phase 2 (0.25 to 1.0): Zoom further, Move Down (Pedestal), and Look Down (Tilt).
 
-    // Interpolation Logic
+    // Interpolation Configuration
     const startZ = 1.2;
     const midZ = 4.5;
     const finalZ = 7.0;
     
     const startY = 0;
-    const finalY = -1.5; // Pan down to show floor/rug
+    const finalY = -1.0; // Slightly move down
+    
+    const startXRot = 0;
+    const finalXRot = -0.15; // Rotate x-axis to look down (~8.5 degrees)
     
     // Calculate current target position based on scroll
     let targetZ = startZ;
     let targetY = startY;
-    let targetXRotation = 0;
+    let targetXRotation = startXRot;
 
     if (r <= 0.25) {
-      // Linear zoom phase (0% to 25%)
-      // Normalize r to 0-1 for this phase
+      // Phase 1: Linear zoom (0% to 25%)
       const phaseProgress = r / 0.25; 
       targetZ = THREE.MathUtils.lerp(startZ, midZ, phaseProgress);
-      targetY = startY; // Stay centered
+      targetY = startY;
+      targetXRotation = startXRot;
     } else {
-      // Pan down phase (25% to 100%)
+      // Phase 2: Pan/Tilt down and Zoom out (25% to 100%)
       const phaseProgress = (r - 0.25) / 0.75;
       
-      // Smooth step for nicer ease-in-out feel on the second phase
+      // Smooth step for nicer ease-in-out feel
       const smoothProgress = phaseProgress * phaseProgress * (3 - 2 * phaseProgress);
 
       targetZ = THREE.MathUtils.lerp(midZ, finalZ, smoothProgress);
       targetY = THREE.MathUtils.lerp(startY, finalY, smoothProgress);
+      targetXRotation = THREE.MathUtils.lerp(startXRot, finalXRot, smoothProgress);
     }
 
     // --- Parallax Effect ---
-    // Only active when we have zoomed out significantly to avoid disorientation close up
-    const parallaxStrength = 0.05; // Maximum rotation in radians
-    const parallaxRamp = THREE.MathUtils.smoothstep(r, 0.2, 1.0); // Ramp up effect as we zoom out
+    // Only active when we have zoomed out significantly
+    const parallaxStrength = 0.05; 
+    const parallaxRamp = THREE.MathUtils.smoothstep(r, 0.2, 1.0);
     
-    // state.pointer gives normalized coordinates (-1 to 1)
     const lookX = -state.pointer.x * parallaxStrength * parallaxRamp;
     const lookY = state.pointer.y * parallaxStrength * parallaxRamp;
 
-    // Smoothly damp the camera position to the target for extra buttery feel
-    camera.position.z = targetZ;
-    camera.position.y = targetY;
-    
-    // Apply rotation with parallax
-    // Note: We add parallax to the base rotation (which is currently 0)
-    camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, lookX, delta * 2);
-    camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetXRotation + lookY, delta * 2);
+    // Smoothly damp the camera position and rotation to the targets
+    // We use a lerp factor (dampSpeed)
+    const dampSpeed = 3.0;
 
-    // Subtle floating effect for the whole room to make it feel "dreamy" 
-    // We apply this to the group, but very subtly inversely to scroll to ground it when zoomed out?
-    // Actually, let's keep it static for stability, Float component handles objects.
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, delta * dampSpeed);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, delta * dampSpeed);
+    
+    // Apply rotation targets plus parallax
+    // We target the base rotation + the mouse look offset
+    camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetXRotation + lookY, delta * dampSpeed);
+    camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, lookX, delta * dampSpeed);
   });
 
   return (
@@ -87,22 +90,14 @@ const SceneContent: React.FC = () => {
       
       {/* The Room Group */}
       <group ref={groupRef}>
-        
-        {/* The Outside View (Sky/City) */}
         <OutsideView />
-
-        {/* The Window Frame */}
         <WindowFrame />
-
-        {/* The Curtains */}
         <Curtains />
-
-        {/* The Room Walls/Floor */}
+        <Table />
         <RoomEnvironment />
-
       </group>
 
-      {/* Environment reflections for shiny objects */}
+      {/* Environment reflections */}
       <Environment preset="night" />
     </>
   );

@@ -17,11 +17,6 @@ const WindowFrame: React.FC = () => {
         <boxGeometry args={[2.2, 0.1, 0.2]} />
       </mesh>
       
-      {/* Bottom Frame / Sill */}
-      <mesh position={[0, -1.55, 0.05]} castShadow receiveShadow material={frameMaterial}>
-        <boxGeometry args={[2.4, 0.15, 0.4]} />
-      </mesh>
-
       {/* Left Frame */}
       <mesh position={[-1.05, 0, 0]} castShadow receiveShadow material={frameMaterial}>
         <boxGeometry args={[0.1, 3, 0.2]} />
