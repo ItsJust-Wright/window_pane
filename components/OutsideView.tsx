@@ -1,12 +1,15 @@
+
 import React, { useRef } from 'react';
 import { useTexture, useScroll } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const OutsideView: React.FC = () => {
-  // Load texture directly from root using string path to avoid module resolution issues
-  // Since Laguna.jpg is in the same directory as index.html (root), this path resolves correctly at runtime
-  const texture = useTexture('./Laguna.jpg');
+  // Use the Raw GitHub URL to load the image reliably across environments
+  // This bypasses local file path resolution issues
+  const textureUrl = 'https://raw.githubusercontent.com/ItsJust-Wright/window_pane/main/public/Laguna.jpg';
+  
+  const texture = useTexture(textureUrl);
   const materialRef = useRef<THREE.MeshBasicMaterial>(null);
   const scroll = useScroll();
 
@@ -24,10 +27,11 @@ const OutsideView: React.FC = () => {
       {/* 
         The view plane. 
         Placed behind the window. 
-        Scaled up to cover the parallax movement angles.
+        Scaled to 9x12 (Ratio 0.75 or 3:4) to match the Laguna.jpg dimensions (3024x4032).
+        This prevents distortion and cropping.
       */}
       <mesh>
-        <planeGeometry args={[8, 12]} />
+        <planeGeometry args={[9, 12]} />
         <meshBasicMaterial 
           ref={materialRef}
           map={texture} 
@@ -37,7 +41,7 @@ const OutsideView: React.FC = () => {
       
       {/* Distant fog/glow to blend edges if needed */}
       <mesh position={[0, 0, 0.1]}>
-         <planeGeometry args={[8, 12]} />
+         <planeGeometry args={[9, 12]} />
          <meshBasicMaterial color="#000010" transparent opacity={0.3} blending={THREE.AdditiveBlending} />
       </mesh>
     </group>

@@ -1,3 +1,4 @@
+
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -66,7 +67,7 @@ const CurtainSide: React.FC<{ side: 'left' | 'right'; position: [number, number,
   return (
     <mesh ref={meshRef} position={position} rotation={[0, side === 'right' ? -0.1 : 0.1, 0]}>
       {/* High segment count for smooth vertex displacement */}
-      <planeGeometry args={[1.2, 3.5, 32, 32]} />
+      <planeGeometry args={[1.3, 3.5, 32, 32]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
@@ -83,11 +84,11 @@ const Curtains: React.FC = () => {
     // Z moved to 0.35 to clear the window frame and sill
     // Y moved to -0.15 to align top of curtains with the top frame
     <group position={[0, -0.15, 0.35]}>
-      {/* Left Curtain */}
-      <CurtainSide side="left" position={[-1.1, 0, 0]} />
+      {/* Left Curtain - Moved further left for wider window */}
+      <CurtainSide side="left" position={[-1.35, 0, 0]} />
       
-      {/* Right Curtain */}
-      <CurtainSide side="right" position={[1.1, 0, 0]} />
+      {/* Right Curtain - Moved further right for wider window */}
+      <CurtainSide side="right" position={[1.35, 0, 0]} />
     </group>
   );
 };

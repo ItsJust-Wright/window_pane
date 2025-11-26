@@ -1,8 +1,10 @@
+
 import React from 'react';
 import * as THREE from 'three';
 
 const WindowFrame: React.FC = () => {
   // Simple geometry composition for a window frame
+  // Aspect Ratio 3:4 (e.g. 2.25 width, 3 height)
   const frameColor = "#1a1a1a";
   const frameMaterial = new THREE.MeshStandardMaterial({ 
     color: frameColor, 
@@ -10,26 +12,34 @@ const WindowFrame: React.FC = () => {
     metalness: 0.2
   });
 
+  const glassWidth = 2.25;
+  const glassHeight = 3;
+  const frameThickness = 0.1;
+  const frameDepth = 0.2;
+
+  const sideFramePos = (glassWidth / 2) + (frameThickness / 2);
+  const topFrameWidth = glassWidth + (frameThickness * 2);
+
   return (
     <group>
       {/* Top Frame */}
-      <mesh position={[0, 1.55, 0]} castShadow receiveShadow material={frameMaterial}>
-        <boxGeometry args={[2.2, 0.1, 0.2]} />
+      <mesh position={[0, (glassHeight / 2) + (frameThickness / 2), 0]} castShadow receiveShadow material={frameMaterial}>
+        <boxGeometry args={[topFrameWidth, frameThickness, frameDepth]} />
       </mesh>
       
       {/* Left Frame */}
-      <mesh position={[-1.05, 0, 0]} castShadow receiveShadow material={frameMaterial}>
-        <boxGeometry args={[0.1, 3, 0.2]} />
+      <mesh position={[-sideFramePos, 0, 0]} castShadow receiveShadow material={frameMaterial}>
+        <boxGeometry args={[frameThickness, glassHeight, frameDepth]} />
       </mesh>
 
       {/* Right Frame */}
-      <mesh position={[1.05, 0, 0]} castShadow receiveShadow material={frameMaterial}>
-        <boxGeometry args={[0.1, 3, 0.2]} />
+      <mesh position={[sideFramePos, 0, 0]} castShadow receiveShadow material={frameMaterial}>
+        <boxGeometry args={[frameThickness, glassHeight, frameDepth]} />
       </mesh>
 
       {/* Glass (Slightly reflective) */}
       <mesh position={[0, 0, -0.01]}>
-        <planeGeometry args={[2, 3]} />
+        <planeGeometry args={[glassWidth, glassHeight]} />
         <meshPhysicalMaterial 
           color="#88ccff" 
           transmission={0.2} 

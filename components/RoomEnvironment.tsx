@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,27 +8,36 @@ const RoomEnvironment: React.FC = () => {
   const wallMaterial = new THREE.MeshStandardMaterial({ color: '#1a1a20' });
   const floorMaterial = new THREE.MeshStandardMaterial({ color: '#2a2a35' });
 
+  // Window frame dimensions calculations
+  const windowWidth = 2.25;
+  const frameThickness = 0.1;
+  const totalWindowWidth = windowWidth + (frameThickness * 2); // ~2.45
+  const halfWindowWidth = totalWindowWidth / 2; // ~1.225
+
   return (
     <group>
       {/* Wall containing the window */}
+      
       {/* Left side of window */}
-      <mesh position={[-3.6, 0, -0.1]} receiveShadow material={wallMaterial}>
+      {/* Positioned so right edge touches window frame */}
+      {/* Plane width 5. Center = -(halfWindow + 2.5) */}
+      <mesh position={[-(halfWindowWidth + 2.5), 0, -0.1]} receiveShadow material={wallMaterial}>
         <planeGeometry args={[5, 6]} />
       </mesh>
       
       {/* Right side of window */}
-      <mesh position={[3.6, 0, -0.1]} receiveShadow material={wallMaterial}>
+      <mesh position={[(halfWindowWidth + 2.5), 0, -0.1]} receiveShadow material={wallMaterial}>
         <planeGeometry args={[5, 6]} />
       </mesh>
       
       {/* Top of window */}
       <mesh position={[0, 3.05, -0.1]} receiveShadow material={wallMaterial}>
-        <planeGeometry args={[2.2, 3]} />
+        <planeGeometry args={[totalWindowWidth, 3]} />
       </mesh>
       
       {/* Bottom of window (wall below sill) */}
       <mesh position={[0, -3.05, -0.1]} receiveShadow material={wallMaterial}>
-        <planeGeometry args={[2.2, 3]} />
+        <planeGeometry args={[totalWindowWidth, 3]} />
       </mesh>
 
       {/* Floor */}

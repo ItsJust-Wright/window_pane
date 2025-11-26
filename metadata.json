@@ -1,5 +1,7 @@
 {
   "name": "Immersive Window View",
   "description": "A React Three Fiber experience featuring a cozy room, flowing curtains, and an interactive zoom-out mechanic revealing a night cityscape.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }
