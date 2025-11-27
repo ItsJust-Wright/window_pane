@@ -290,31 +290,42 @@ const Table: React.FC = () => {
   };
 
   const capturePhoto = (video: HTMLVideoElement, stream: MediaStream) => {
-    // Create canvas to handle crop
+    // Create canvas
     const canvas = document.createElement('canvas');
-    // Desired vertical resolution (e.g. 0.28/0.38 aspect ratio ~ 0.73)
-    const targetW = 480;
-    const targetH = 640; 
+    // Horizontal resolution (4:3 aspect ratio preferred for frames)
+    const targetW = 640;
+    const targetH = 480; 
     canvas.width = targetW;
     canvas.height = targetH;
     
     const ctx = canvas.getContext('2d');
     if (ctx) {
-      // Calculate crop from horizontal video to vertical frame
-      // Video is usually 640x480 (4:3) or 1280x720 (16:9)
+      // Calculate crop from video to horizontal frame (4:3)
       const vidW = video.videoWidth;
       const vidH = video.videoHeight;
-      const vidAspect = vidW / vidH;
-      const targetAspect = targetW / targetH; // < 1 (Vertical)
+      const targetAspect = targetW / targetH; // 1.33
 
       let drawW, drawH, offsetX, offsetY;
 
-      // Crop center logic
-      // Since video is wider than target vertical frame, we match height and crop width
-      drawH = vidH;
-      drawW = vidH * targetAspect;
-      offsetX = (vidW - drawW) / 2;
-      offsetY = 0;
+      // Crop to Fill logic
+      // If video is wider than target aspect (e.g. 16:9 vs 4:3), crop sides
+      // If video is taller (unlikely for webcam), crop top/bottom
+      
+      const videoAspect = vidW / vidH;
+      
+      if (videoAspect > targetAspect) {
+        // Video is wider, fit height
+        drawH = vidH;
+        drawW = vidH * targetAspect;
+        offsetX = (vidW - drawW) / 2;
+        offsetY = 0;
+      } else {
+        // Video is taller or equal, fit width
+        drawW = vidW;
+        drawH = vidW / targetAspect;
+        offsetX = 0;
+        offsetY = (vidH - drawH) / 2;
+      }
 
       ctx.drawImage(video, offsetX, offsetY, drawW, drawH, 0, 0, targetW, targetH);
       
@@ -323,6 +334,19 @@ const Table: React.FC = () => {
       texture.colorSpace = THREE.SRGBColorSpace;
       
       setCapturedTexture(texture);
+
+      // --- Download Logic ---
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `window-memory-${new Date().getFullYear()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e) {
+        console.error("Failed to download image", e);
+      }
     }
 
     // Stop camera
@@ -395,12 +419,12 @@ const Table: React.FC = () => {
           texture={photos.year2024}
         />
         
-        {/* 4th Frame - Interactive (Right Outer - Vertical) */}
+        {/* 4th Frame - Interactive (Right Outer - Horizontal) */}
         <PhotoFrame 
           position={[1.85, frameY, 0.3]} 
           rotation={[-0.15, -0.4, 0]}
-          width={0.35}
-          height={0.45}
+          width={0.45}
+          height={0.35}
           onClick={handleCameraClick}
           texture={capturedTexture}
         >
