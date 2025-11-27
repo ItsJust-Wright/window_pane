@@ -4,11 +4,13 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 
-// Props interface including new interactive props
+// Props interface including new interactive props and dimensions
 interface PhotoFrameProps {
   position: [number, number, number];
   rotation?: [number, number, number];
   scale?: number;
+  width?: number;
+  height?: number;
   texture?: THREE.Texture | null;
   onClick?: () => void;
   children?: React.ReactNode;
@@ -18,6 +20,8 @@ const PhotoFrame: React.FC<PhotoFrameProps> = ({
   position, 
   rotation = [0, 0, 0], 
   scale = 1,
+  width = 0.35, // Default Vertical Width
+  height = 0.45, // Default Vertical Height
   texture,
   onClick,
   children
@@ -46,6 +50,11 @@ const PhotoFrame: React.FC<PhotoFrameProps> = ({
 
   const [hovered, setHovered] = useState(false);
 
+  // Calculate inner photo size based on frame size (maintaining approx border)
+  const borderThickness = 0.07;
+  const photoWidth = Math.max(0.1, width - borderThickness);
+  const photoHeight = Math.max(0.1, height - borderThickness);
+
   return (
     <group 
       position={position} 
@@ -62,17 +71,17 @@ const PhotoFrame: React.FC<PhotoFrameProps> = ({
     >
       {/* Main Frame */}
       <mesh castShadow receiveShadow material={frameMaterial}>
-        <boxGeometry args={[0.35, 0.45, 0.03]} />
+        <boxGeometry args={[width, height, 0.03]} />
       </mesh>
 
       {/* Photo Surface */}
       <mesh position={[0, 0, 0.016]} material={photoMaterial}>
-        <planeGeometry args={[0.28, 0.38]} />
+        <planeGeometry args={[photoWidth, photoHeight]} />
       </mesh>
 
       {/* Back Support Leg */}
       <mesh position={[0, -0.05, -0.1]} rotation={[-0.3, 0, 0]} castShadow material={backStandMaterial}>
-        <boxGeometry args={[0.1, 0.3, 0.02]} />
+        <boxGeometry args={[0.1, height * 0.7, 0.02]} />
       </mesh>
 
       {/* Cursor feedback for interactive frame */}
@@ -207,12 +216,46 @@ const Table: React.FC = () => {
   const tableHeightFromFloor = 1.2;
   const topThickness = 0.08;
   const tableSurfaceY = tableHeightFromFloor;
+  // Adjusted frameY to ensure they sit on the table correctly
   const frameY = tableSurfaceY + 0.225 - 0.005;
 
   // Camera State
   const [capturedTexture, setCapturedTexture] = useState<THREE.Texture | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Photo State
+  const [photos, setPhotos] = useState<{
+    year2022: THREE.Texture | null;
+    year2023: THREE.Texture | null;
+    year2024: THREE.Texture | null;
+  }>({ year2022: null, year2023: null, year2024: null });
+
+  // Load static photos
+  useEffect(() => {
+    const loader = new THREE.TextureLoader();
+    loader.crossOrigin = "Anonymous";
+
+    // Base URL for JSDelivr GH proxy
+    const baseUrl = 'https://cdn.jsdelivr.net/gh/ItsJust-Wright/window_pane@main/public/';
+
+    const loadTexture = (filename: string, key: keyof typeof photos) => {
+      loader.load(
+        `${baseUrl}${filename}`,
+        (tex) => {
+          tex.colorSpace = THREE.SRGBColorSpace;
+          setPhotos(prev => ({ ...prev, [key]: tex }));
+        },
+        undefined,
+        (err) => console.warn(`Failed to load ${filename}`, err)
+      );
+    };
+
+    loadTexture('2022.JPG', 'year2022');
+    loadTexture('2023.jpg', 'year2023');
+    loadTexture('2024.jpg', 'year2024');
+
+  }, []);
 
   const handleCameraClick = async () => {
     if (isProcessing || countdown !== null || capturedTexture) return;
@@ -277,8 +320,6 @@ const Table: React.FC = () => {
       
       // Create texture from canvas
       const texture = new THREE.CanvasTexture(canvas);
-      // Flip Y if needed usually for WebGL, but CanvasTexture handles it usually. 
-      // Sometimes ThreeJS textures from canvas need color space update
       texture.colorSpace = THREE.SRGBColorSpace;
       
       setCapturedTexture(texture);
@@ -324,26 +365,42 @@ const Table: React.FC = () => {
 
       {/* Picture Frames */}
       <group>
-        {/* Left Pair */}
+        {/* Left Outer - 2022 (Horizontal) */}
+        {/* Width 0.45, Height 0.35 */}
         <PhotoFrame 
-          position={[-1.7, frameY, 0.25]} 
-          rotation={[-0.15, 0.35, 0]} 
-        />
-        <PhotoFrame 
-          position={[-1.25, frameY, 0.1]} 
-          rotation={[-0.15, 0.1, 0]} 
-        />
-
-        {/* Right Pair */}
-        <PhotoFrame 
-          position={[1.3, frameY, 0.1]} 
-          rotation={[-0.15, -0.05, 0]} 
+          position={[-1.8, frameY, 0.25]} 
+          rotation={[-0.15, 0.35, 0]}
+          width={0.45}
+          height={0.35}
+          texture={photos.year2022}
         />
         
-        {/* 4th Frame - Interactive */}
+        {/* Left Inner - 2023 (Horizontal) */}
+        {/* Width 0.45, Height 0.35 */}
+        <PhotoFrame 
+          position={[-1.25, frameY, 0.1]} 
+          rotation={[-0.15, 0.1, 0]}
+          width={0.45}
+          height={0.35}
+          texture={photos.year2023}
+        />
+
+        {/* Right Inner - 2024 (Vertical) */}
+        {/* Width 0.35, Height 0.45 */}
+        <PhotoFrame 
+          position={[1.3, frameY, 0.1]} 
+          rotation={[-0.15, -0.05, 0]}
+          width={0.35}
+          height={0.45}
+          texture={photos.year2024}
+        />
+        
+        {/* 4th Frame - Interactive (Right Outer - Vertical) */}
         <PhotoFrame 
           position={[1.85, frameY, 0.3]} 
           rotation={[-0.15, -0.4, 0]}
+          width={0.35}
+          height={0.45}
           onClick={handleCameraClick}
           texture={capturedTexture}
         >

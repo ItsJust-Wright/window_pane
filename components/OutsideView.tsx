@@ -1,22 +1,46 @@
 
-import React, { useRef } from 'react';
-import { useTexture, useScroll } from '@react-three/drei';
+import React, { useRef, useEffect, useState } from 'react';
+import { useScroll } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const OutsideView: React.FC = () => {
-  // Use a reliable Unsplash URL for the night cityscape
-  // This replaces the broken raw.githubusercontent URL that was causing loading failures
-  const textureUrl = 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80';
-  
-  const texture = useTexture(textureUrl);
   const materialRef = useRef<THREE.MeshBasicMaterial>(null);
   const scroll = useScroll();
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
+
+  useEffect(() => {
+    const loader = new THREE.TextureLoader();
+    
+    // We use JSDelivr to fetch the image from your GitHub repo.
+    // JSDelivr adds the necessary CORS headers that raw GitHub links are missing.
+    const gitHubImage = 'https://cdn.jsdelivr.net/gh/ItsJust-Wright/window_pane@main/public/background.jpg';
+    
+    // Fallback in case the GitHub image hasn't propagated or is renamed
+    const fallbackImage = 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=2613&auto=format&fit=crop';
+
+    loader.crossOrigin = "Anonymous";
+
+    loader.load(
+      gitHubImage,
+      (loadedTexture) => {
+        loadedTexture.colorSpace = THREE.SRGBColorSpace;
+        setTexture(loadedTexture);
+      },
+      undefined,
+      (err) => {
+        console.warn(`Failed to load GitHub image, reverting to fallback.`, err);
+        loader.load(fallbackImage, (fallbackTex) => {
+          fallbackTex.colorSpace = THREE.SRGBColorSpace;
+          setTexture(fallbackTex);
+        });
+      }
+    );
+  }, []);
 
   useFrame(() => {
     if (materialRef.current) {
       // Dim the image brightness by 10% as we zoom out (scroll offset 0 -> 1)
-      // 1.0 = full brightness, 0.9 = 90% brightness
       const brightness = 1.0 - (scroll.offset * 0.1);
       materialRef.current.color.setScalar(brightness);
     }
@@ -31,11 +55,16 @@ const OutsideView: React.FC = () => {
       */}
       <mesh>
         <planeGeometry args={[9, 12]} />
-        <meshBasicMaterial 
-          ref={materialRef}
-          map={texture} 
-          toneMapped={false} 
-        />
+        {texture ? (
+          <meshBasicMaterial 
+            ref={materialRef}
+            map={texture} 
+            toneMapped={false} 
+          />
+        ) : (
+          // Temporary placeholder while loading
+          <meshBasicMaterial color="#050510" />
+        )}
       </mesh>
       
       {/* Distant fog/glow to blend edges if needed */}
