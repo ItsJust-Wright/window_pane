@@ -31,10 +31,10 @@ const SceneContent: React.FC = () => {
     const finalZ = 5.5;
     
     const startY = 0;
-    const finalY = -1.5; // Slightly move down further
+    const finalY = -1.0; // Move down, but keep some height to look down at table
     
     const startXRot = 0;
-    const finalXRot = 0.0; // Rotate x-axis to look straight/slightly up from lower position
+    const finalXRot = -0.1; // Rotate x-axis to look down at the table
     
     // Calculate current target position based on scroll
     let targetZ = startZ;
